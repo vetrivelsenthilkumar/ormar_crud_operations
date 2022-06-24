@@ -2,7 +2,7 @@ import schema
 import models
 from database import database
 from fastapi import FastAPI
-
+from fpdf import FPDF
 app = FastAPI()
 
 app.state.database = database
@@ -210,3 +210,45 @@ async def fetch_all_mark():
     return schema.FetchAllStudentsSchema(
         students=students_list
     )
+
+
+
+
+# save FPDF() class into a
+# variable pdf
+@app.get("/fetch_detail_for_one_student_in_pdf")
+async def fetch_all_subject_mark(student: int):
+    pdf = FPDF()
+
+# Add a page
+    pdf.add_page()
+
+    pdf.set_font("Arial", size = 15)
+
+
+
+    stu_count = 1
+
+    students = await models.Student.objects.get(id=student)
+    marks = await models.Marks.objects.filter(student_id=student).all()
+
+    pdf.cell(200, 10, txt=f"{stu_count}. Student Name : {students.name}",
+             ln=1, align='C')
+
+    subj = 1
+    for i in marks:
+        subject_id = i.subject_id.id
+        subject_name = await models.Subject.objects.filter(id=subject_id).get()
+        pdf.cell(200, 10, txt=f" {subj}.Subject Name : {subject_name.name}", ln=1, align='L')
+        pdf.cell(200, 10, txt=f"  Subject Mark : {i.marks}", ln=1, align='L')
+        subj += 1
+        pdf.cell(200, 10, txt="", ln=1, align='L')
+        stu_count += 1
+
+    pdf.output(f"{students.id}_{students.name}.pdf")
+    return f'/home/vetrivel/PycharmProjects/crud_operations/{students.id}--{students.name}.pdf'
+
+
+
+
+
