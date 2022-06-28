@@ -2,10 +2,14 @@ import schema
 import models
 from database import database
 from fastapi import FastAPI
-from fpdf import FPDF
+from fpdf import FPDF, HTMLMixin
+from generatepdf import student_details
+#from generatepdf import PDF
+
 app = FastAPI()
 
 app.state.database = database
+
 
 @app.on_event("startup")
 async def startup() -> None:
@@ -19,6 +23,7 @@ async def shutdown() -> None:
     database_ = app.state.database
     if database_.is_connected:
         await database_.disconnect()
+
 
 # Get all Students
 
@@ -181,19 +186,20 @@ async def fetch_mark(student: int):
     )
     return response
 
+
 @app.get('/fetch_all_students_marks')
 async def fetch_all_mark():
     students_db = await models.Student.objects.all()
-    #sub1 = db.query(models.Subject).all()
+    # sub1 = db.query(models.Subject).all()
 
     students_list = []
 
     for students in students_db:
-        mark = await models.Marks.objects.filter(student_id =students.id).all()
+        mark = await models.Marks.objects.filter(student_id=students.id).all()
         details = []
         for i in mark:
             subject_id = i.subject_id.id
-            subject_name = await models.Subject.objects.filter(id =subject_id).get()
+            subject_name = await models.Subject.objects.filter(id=subject_id).get()
             s = schema.FetchMarksSchema(
                 subject_id=i.subject_id.id,
                 subject_name=subject_name.name,
@@ -212,43 +218,33 @@ async def fetch_all_mark():
     )
 
 
-
-
 # save FPDF() class into a
 # variable pdf
 @app.get("/fetch_detail_for_one_student_in_pdf")
 async def fetch_all_subject_mark(student: int):
-    pdf = FPDF()
+    pdf = student_details()
+    pdf.create_pdf()
 
-# Add a page
-    pdf.add_page()
-
-    pdf.set_font("Arial", size = 15)
-
-
+    pdf.set_font("Arial", 15)
 
     stu_count = 1
 
     students = await models.Student.objects.get(id=student)
     marks = await models.Marks.objects.filter(student_id=student).all()
 
-    pdf.cell(200, 10, txt=f"{stu_count}. Student Name : {students.name}",
-             ln=1, align='C')
+    pdf.write_pdf(f'{stu_count}. Student Name : {students.name}',
+             'C')
 
     subj = 1
     for i in marks:
         subject_id = i.subject_id.id
         subject_name = await models.Subject.objects.filter(id=subject_id).get()
-        pdf.cell(200, 10, txt=f" {subj}.Subject Name : {subject_name.name}", ln=1, align='L')
-        pdf.cell(200, 10, txt=f"  Subject Mark : {i.marks}", ln=1, align='L')
+        pdf.write_pdf(f" {subj}.Subject Name : {subject_name.name}", 'L')
+        pdf.write_pdf(f"  Subject Mark : {i.marks}", 'L')
         subj += 1
-        pdf.cell(200, 10, txt="", ln=1, align='L')
+        pdf.write_pdf("", 'L')
         stu_count += 1
 
-    pdf.output(f"{students.id}_{students.name}.pdf")
+    pdf.generate_pdf(f"{students.id}_{students.name}")
     return f'/home/vetrivel/PycharmProjects/crud_operations/{students.id}--{students.name}.pdf'
-
-
-
-
 
