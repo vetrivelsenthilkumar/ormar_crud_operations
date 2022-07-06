@@ -268,7 +268,7 @@ async def fetch_all_subject_mark(student_id: int):
                     <head>
                         <meta charset="UTF-8">
                         <h1 align="center">Report Card</h1>
-                        <h2 align="left"> Name of the Student: {students.name},     Student Id:{students.id}"</h2>
+                        <h2 align="left"> Name of the Student: {students.name}    Student Id:{students.id}</h2>
                     </head>
                     
                     <body>
