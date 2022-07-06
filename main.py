@@ -317,7 +317,7 @@ async def fetch_all_subject_mark(student_id: int):
                             </tbody>
                             <tbody width="200%">
                             <tr text-align="center">
-                                <th bgcolor="red" colspan="2"  align="left">Result: {result}</th>
+                                <th colspan="2"  align="left">Result: {result}</th>
                                 <th colspan="2" align="left">Total: {total}</th>
                             </tr>
                               """
