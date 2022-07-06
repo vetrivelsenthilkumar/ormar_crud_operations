@@ -1,10 +1,16 @@
 import schema
 import models
 from database import database
-from fastapi import FastAPI
+from fastapi import FastAPI, BackgroundTasks
 from fpdf import FPDF, HTMLMixin
 from generatepdf import student_details
 from generate_excel import Writer
+from time import sleep
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from email.mime.base import MIMEBase
+from email import encoders
 
 app = FastAPI()
 
@@ -384,3 +390,53 @@ async def fetch_data_in_csv_file(student_id: int):
     writer.write_excel(row + 1, col, f"Result:{result}")
     writer.write_excel(row + 1, col + 2, f"Total:{total}")
     writer.close_excel()
+
+
+'''def handle_email_task(email: str, data:str):
+    print(email)
+    print(data)
+    for i in range(100):
+        print(i)
+        time.sleep(0.1)'''
+
+'''@app.get("/send_email_background_task")
+async def send_email(email: str, background_task = BackgroundTasks):
+    print(email)
+    background_task.add_task(handle_email_task, email, "Sending email of student details")
+    return {"user": "VetriSenthil", "message": "mail sent"}'''
+
+def send_email(message):
+    sleep(5)
+    print('Sending email:', message)
+
+@app.get('/send_email')
+async def mail(background_tasks: BackgroundTasks):
+    background_tasks.add_task(fetch_all_subject_mark, 1)
+    background_tasks.add_task(fetch_data_in_csv_file, 2)
+    background_tasks.add_task(send_email, "Hi Welcome")
+    mail_content = '''Student Details'''
+    sender_address = 'vetrisenthilmkce@gmail.com'
+    sender_pass = 'qxqmgpvvghmopyra'
+    receiver_address = 'vetrisenthilmkce@gmail.com'
+    message = MIMEMultipart()
+    message['From'] = sender_address
+    message['To'] = receiver_address
+    message['Subject'] = 'A test mail sent by Python. It has an attachment.'
+    message.attach(MIMEText(mail_content, 'plain'))
+    attach_file_name = 'Senthilkumar.pdf'
+    attach_file = open(attach_file_name, 'rb')
+    payload = MIMEBase('application', 'octate-stream')
+    payload.set_payload((attach_file).read())
+    encoders.encode_base64(payload)
+    payload.add_header('Content-Decomposition', 'attachment', filename=attach_file_name)
+    message.attach(payload)
+    session = smtplib.SMTP('smtp.gmail.com', 587)
+    session.starttls()
+    session.login(sender_address, sender_pass)  # login with mail_id and password
+    text = message.as_string()
+    session.sendmail(sender_address, receiver_address, text)
+    session.quit()
+    print('Mail Sent')
+    return {'result': "Sent"}
+
+
