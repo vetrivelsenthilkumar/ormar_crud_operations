@@ -4,11 +4,7 @@ from database import database
 from fastapi import FastAPI
 from fpdf import FPDF, HTMLMixin
 from generatepdf import student_details
-import xlsxwriter
 from generate_excel import Writer
-from generatepdf import student_information
-
-# from generatepdf import PDF
 
 app = FastAPI()
 
@@ -259,6 +255,7 @@ async def fetch_all_subject_mark(student_id: int):
     marks = await models.Marks.objects.filter(student_id=student_id).all()
     result = []
     s = 1
+
     class StudentPdf(FPDF, HTMLMixin):
         pass
 
@@ -308,7 +305,7 @@ async def fetch_all_subject_mark(student_id: int):
         student_html += "</tr>"
 
         # student_html += """</tbody></table></body></html>"""
-        s +=1
+        s += 1
     for i in result:
         if i == "FAIL":
             result = "FAIL"
@@ -338,7 +335,9 @@ async def fetch_all_subject_mark(student_id: int):
     pdf.add_page()
     pdf.write_html(student_html)
     pdf.output(f"{students.name}.pdf")
-#f"{students.name}.pdf"
+
+
+# f"{students.name}.pdf"
 
 
 @app.get("/fetch_student_record_csv_file")
@@ -348,15 +347,15 @@ async def fetch_data_in_csv_file(student_id: int):
     marks = await models.Marks.objects.filter(student_id=student_id).all()
     writer = Writer()
     writer.create_writer(f"{students.name}.xlsx")
-    row=0
-    col=0
+    row = 0
+    col = 0
     writer.write_excel(row, col, "S.No")
-    writer.write_excel(row, col+1, "Subject_Name")
-    writer.write_excel(row, col+2, "Marks")
-    writer.write_excel(row, col+3, "Result")
+    writer.write_excel(row, col + 1, "Subject_Name")
+    writer.write_excel(row, col + 2, "Marks")
+    writer.write_excel(row, col + 3, "Result")
     s_no = 1
-    #s_no +=1
-    total= 0
+    # s_no +=1
+    total = 0
     subj = 1
     result = []
     for i in marks:
@@ -370,9 +369,9 @@ async def fetch_data_in_csv_file(student_id: int):
             Result = "FAIL"
             result.append(Result)
 
-        writer.write_excel(row+1, col, s_no)
-        writer.write_excel(row+1, col + 1, subject_name.name)
-        writer.write_excel(row+1, col + 2, i.marks)
+        writer.write_excel(row + 1, col, s_no)
+        writer.write_excel(row + 1, col + 1, subject_name.name)
+        writer.write_excel(row + 1, col + 2, i.marks)
         writer.write_excel(row + 1, col + 3, Result)
         row += 1
         s_no += 1
@@ -382,20 +381,6 @@ async def fetch_data_in_csv_file(student_id: int):
             break
         else:
             result = "PASS"
-    writer.write_excel(row+1, col , f"Result:{result}")
-    writer.write_excel(row+1, col + 2, f"Total:{total}")
+    writer.write_excel(row + 1, col, f"Result:{result}")
+    writer.write_excel(row + 1, col + 2, f"Total:{total}")
     writer.close_excel()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
