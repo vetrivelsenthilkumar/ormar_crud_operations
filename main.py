@@ -1,3 +1,5 @@
+import self
+
 import schema
 import models
 from database import database
@@ -11,6 +13,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.base import MIMEBase
 from email import encoders
+import email.utils
 
 app = FastAPI()
 
@@ -392,19 +395,6 @@ async def fetch_data_in_csv_file(student_id: int):
     writer.close_excel()
 
 
-'''def handle_email_task(email: str, data:str):
-    print(email)
-    print(data)
-    for i in range(100):
-        print(i)
-        time.sleep(0.1)'''
-
-'''@app.get("/send_email_background_task")
-async def send_email(email: str, background_task = BackgroundTasks):
-    print(email)
-    background_task.add_task(handle_email_task, email, "Sending email of student details")
-    return {"user": "VetriSenthil", "message": "mail sent"}'''
-
 def send_email_pdf(message):
     sleep(5)
     print('Sending email:', message)
@@ -514,6 +504,14 @@ async def mail(student_id: int):
     encoders.encode_base64(payload)
     payload.add_header('Content-Decomposition', 'attachment', filename=attach_file_name)
     message.attach(payload)
+    msg = email.message_from_string(self.request.body)
+    for part in msg.walk():
+        ctype = part.get_content_type()
+        if ctype in [f"{students.name}.pdf"]:
+            pdf = part.get_payload(decode=True)
+            pdf_file_name = part.get_filename()
+            print(pdf)
+            print(pdf_file_name)
     session = smtplib.SMTP('smtp.gmail.com', 587)
     session.starttls()
     session.login(sender_address, sender_pass)
@@ -523,7 +521,7 @@ async def mail(student_id: int):
     print('Mail Sent')
     return {'result': "Sent"}
 
-def send_email_csv(message):
+def send_email_xlsx(message):
     sleep(5)
     print('Sending email:', message)
 
@@ -595,3 +593,4 @@ async def mail(student_id: int):
     session.quit()
     print('Mail Sent')
     return {'result': "Sent"}
+
