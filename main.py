@@ -1,5 +1,3 @@
-import self
-
 import schema
 import models
 from database import database
@@ -13,7 +11,6 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.base import MIMEBase
 from email import encoders
-import email.utils
 
 app = FastAPI()
 
@@ -504,14 +501,6 @@ async def mail(student_id: int):
     encoders.encode_base64(payload)
     payload.add_header('Content-Decomposition', 'attachment', filename=attach_file_name)
     message.attach(payload)
-    msg = email.message_from_string(self.request.body)
-    for part in msg.walk():
-        ctype = part.get_content_type()
-        if ctype in [f"{students.name}.pdf"]:
-            pdf = part.get_payload(decode=True)
-            pdf_file_name = part.get_filename()
-            print(pdf)
-            print(pdf_file_name)
     session = smtplib.SMTP('smtp.gmail.com', 587)
     session.starttls()
     session.login(sender_address, sender_pass)
