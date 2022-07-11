@@ -392,15 +392,17 @@ async def fetch_data_in_csv_file(student_id: int):
     writer.close_excel()
 
 
-def send_email_pdf(message):
+'''def send_email_pdf(message):
     sleep(5)
-    print('Sending email:', message)
+    print('Sending email:', message)'''
 
 @app.get('/send_email_pdf_file')
 async def mail(student_id: int):
+    #attach1 = fetch_all_subject_mark(student_id)
     #background_tasks.add_task(fetch_all_subject_mark, 1)
     #background_tasks.add_task(fetch_data_in_csv_file, 2)
     #background_tasks.add_task(send_email, "Hi Welcome")
+    sleep(5)
     students = await models.Student.objects.get(id=student_id)
     marks = await models.Marks.objects.filter(student_id=student_id).all()
     result = []
@@ -510,12 +512,13 @@ async def mail(student_id: int):
     print('Mail Sent')
     return {'result': "Sent"}
 
-def send_email_xlsx(message):
+'''def send_email_xlsx(message):
     sleep(5)
-    print('Sending email:', message)
+    print('Sending email:', message)'''
 
 @app.get('/send_email_csv_file')
 async def mail(student_id: int):
+    sleep(5)
     result = None
     students = await models.Student.objects.get(id=student_id)
     marks = await models.Marks.objects.filter(student_id=student_id).all()
@@ -582,4 +585,7 @@ async def mail(student_id: int):
     session.quit()
     print('Mail Sent')
     return {'result': "Sent"}
+
+
+
 
