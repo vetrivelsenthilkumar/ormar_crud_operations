@@ -523,7 +523,7 @@ async def mail(student_id: int):
     print('Mail Sent')
     return {'result': "Sent"}
 
-def send_email_xlsx(message):
+def send_email_csv(message):
     sleep(5)
     print('Sending email:', message)
 
