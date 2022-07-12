@@ -1,3 +1,6 @@
+import email
+from email.mime.application import MIMEApplication
+
 import schema
 import models
 from database import database
@@ -392,101 +395,10 @@ async def fetch_data_in_csv_file(student_id: int):
     writer.close_excel()
 
 
-'''def send_email_pdf(message):
-    sleep(5)
-    print('Sending email:', message)'''
-
 @app.get('/send_email_pdf_file')
 async def mail(student_id: int):
-    #attach1 = fetch_all_subject_mark(student_id)
-    #background_tasks.add_task(fetch_all_subject_mark, 1)
-    #background_tasks.add_task(fetch_data_in_csv_file, 2)
-    #background_tasks.add_task(send_email, "Hi Welcome")
-    sleep(5)
     students = await models.Student.objects.get(id=student_id)
-    marks = await models.Marks.objects.filter(student_id=student_id).all()
-    result = []
-    s = 1
-
-    class StudentPdf(FPDF, HTMLMixin):
-        pass
-
-    student_html = f"""
-                        <!DOCTYPE html>
-                        <html lang="en">
-                        <head>
-                            <meta charset="UTF-8">
-                            <h1 align="center">Report Card</h1>
-                            <h2 align="left"> Name of the Student: {students.name}    Student Id:{students.id}</h2>
-                        </head>
-
-                        <body>
-                            <table style="width:90% border: 1px solid black;" class = "class" width="100%" border="1" height="100%" align="center">
-                            <thead>
-                            <tr>
-                            <th width="20%" > S.No</th>
-                            <th width="20%" > Subject</th>
-                            <th width="20%" > Mark</th>
-                            <th width="20%" > Result</th>
-                            </tr>
-                            </thead>
-                            <tbody class="text-center text-sm">
-                                                    """
-    s_no = 0
-    total = 0
-    for i in marks:
-        total += i.marks
-        subject_id = i.subject_id.id
-        subject_name = await models.Subject.objects.filter(id=subject_id).get()
-        s_no += 1
-        if i.marks >= 50:
-            Result = "PASS"
-            result.append(Result)
-        else:
-            Result = "FAIL"
-            result.append(Result)
-
-        student_html += "<tr>"
-        student_html += """<td align="center" font face="Arial">""" + str(s_no) + "</td>"
-        student_html += """<td align="center" >""" + subject_name.name + "</td>"
-        student_html += """<td align="center" >""" + str(i.marks) + "</td>"
-        if Result == "PASS":
-            student_html += """<td align="center"> """ + Result + "</td>"
-        else:
-            student_html += """<td  align="center"><font color="#FF0000">""" + Result + "</font></td>"
-        student_html += "</tr>"
-
-        # student_html += """</tbody></table></body></html>"""
-        s += 1
-    for i in result:
-        if i == "FAIL":
-            result = "FAIL"
-            break
-        else:
-            result = "PASS"
-    if result == "PASS":
-        student_html += f"""
-                                </tbody>
-                                <tbody width="200%">
-                                <tr text-align="center">
-                                    <th colspan="2"  align="left">Result: {result}</th>
-                                    <th colspan="2" align="left">Total: {total}</th>
-                                </tr>
-                                  """
-    else:
-        student_html += f"""
-                                    </tbody>
-                                    <tbody width="200%">
-                                    <tr text-align="center">
-                                        <th colspan="2"  align="left"><font color="#FF0000">Result: {result}</font></th>
-                                        <th colspan="2" align="left">Total: {total}</th>
-                                    </tr>
-                                    """
-        student_html += """</tbody></table></body></html>"""
-    pdf = StudentPdf()
-    pdf.add_page()
-    pdf.write_html(student_html)
-    pdf.output(f"{students.name}.pdf")
+    await fetch_all_subject_mark(student_id=student_id)
     mail_content = '''Student Details'''
     sender_address = 'vetrisenthilmkce@gmail.com'
     sender_pass = 'qxqmgpvvghmopyra'
@@ -497,12 +409,15 @@ async def mail(student_id: int):
     message['Subject'] = 'A test mail sent by Python. It has an attachment.'
     message.attach(MIMEText(mail_content, 'plain'))
     attach_file_name = f"{students.name}.pdf"
+    print(attach_file_name)
     attach_file = open(attach_file_name, 'rb')
-    payload = MIMEBase('application', 'octate-stream')
-    payload.set_payload((attach_file).read())
-    encoders.encode_base64(payload)
-    payload.add_header('Content-Decomposition', 'attachment', filename=attach_file_name)
-    message.attach(payload)
+    attach = MIMEBase('application', 'octate-stream')
+    attach.set_payload((attach_file).read())
+    encoders.encode_base64(attach)
+    with open(f"/home/vetrivel/PycharmProjects/crud_operation/{students.name}.pdf", "rb") as f:
+        attach = MIMEApplication(f.read(), _subtype="pdf")
+    attach.add_header('Content-Disposition', 'attachment; filename="%s"' % attach_file_name)
+    message.attach(attach)
     session = smtplib.SMTP('smtp.gmail.com', 587)
     session.starttls()
     session.login(sender_address, sender_pass)
@@ -512,55 +427,11 @@ async def mail(student_id: int):
     print('Mail Sent')
     return {'result': "Sent"}
 
-'''def send_email_xlsx(message):
-    sleep(5)
-    print('Sending email:', message)'''
 
 @app.get('/send_email_csv_file')
 async def mail(student_id: int):
-    sleep(5)
-    result = None
     students = await models.Student.objects.get(id=student_id)
-    marks = await models.Marks.objects.filter(student_id=student_id).all()
-    writer = Writer()
-    writer.create_writer(f"{students.name}.xlsx")
-    row = 0
-    col = 0
-    writer.write_excel(row, col, "S.No")
-    writer.write_excel(row, col + 1, "Subject_Name")
-    writer.write_excel(row, col + 2, "Marks")
-    writer.write_excel(row, col + 3, "Result")
-    s_no = 1
-    # s_no +=1
-    total = 0
-    subj = 1
-    result = []
-    for i in marks:
-        total += i.marks
-        subject_id = i.subject_id.id
-        subject_name = await models.Subject.objects.filter(id=subject_id).get()
-        if i.marks >= 50:
-            Result = "PASS"
-            result.append(Result)
-        else:
-            Result = "FAIL"
-            result.append(Result)
-
-        writer.write_excel(row + 1, col, s_no)
-        writer.write_excel(row + 1, col + 1, subject_name.name)
-        writer.write_excel(row + 1, col + 2, i.marks)
-        writer.write_excel(row + 1, col + 3, Result)
-        row += 1
-        s_no += 1
-    for i in result:
-        if i == "FAIL":
-            result = "FAIL"
-            break
-        else:
-            result = "PASS"
-    writer.write_excel(row + 1, col, f"Result:{result}")
-    writer.write_excel(row + 1, col + 2, f"Total:{total}")
-    writer.close_excel()
+    await fetch_data_in_csv_file(student_id=student_id)
     mail_content = '''Student Details'''
     sender_address = 'vetrisenthilmkce@gmail.com'
     sender_pass = 'qxqmgpvvghmopyra'
@@ -572,11 +443,13 @@ async def mail(student_id: int):
     message.attach(MIMEText(mail_content, 'plain'))
     attach_file_name = f"{students.name}.xlsx"
     attach_file = open(attach_file_name, 'rb')
-    payload = MIMEBase('application', 'octate-stream')
-    payload.set_payload((attach_file).read())
-    encoders.encode_base64(payload)
-    payload.add_header('Content-Decomposition', 'attachment', filename=attach_file_name)
-    message.attach(payload)
+    attach = MIMEBase('application', 'octate-stream')
+    attach.set_payload((attach_file).read())
+    encoders.encode_base64(attach)
+    with open(f"/home/vetrivel/PycharmProjects/crud_operation/{students.name}.xlsx", "rb") as f:
+        attach = MIMEApplication(f.read(), _subtype="vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+    attach.add_header('Content-Disposition', 'attachment; filename="%s"' % attach_file_name)
+    message.attach(attach)
     session = smtplib.SMTP('smtp.gmail.com', 587)
     session.starttls()
     session.login(sender_address, sender_pass)
